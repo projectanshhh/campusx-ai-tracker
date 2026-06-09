@@ -69,6 +69,16 @@ const { title, activePage } = Astro.props;
         <a href="/playlist/langgraph" class={`nav-item ${activePage === 'langgraph' ? 'active' : ''}`}>LangGraph</a>
         <a href="/playlist/mcp" class={`nav-item ${activePage === 'mcp' ? 'active' : ''}`}>MCP</a>
         <a href="/playlist/fastapi" class={`nav-item ${activePage === 'fastapi' ? 'active' : ''}`}>FastAPI</a>
+
+        <div class="text-xs font-semibold text-[#444] uppercase tracking-wider px-2 mt-8 mb-2">Cloud Sync</div>
+        <button id="btn-login" class="nav-item text-left w-full flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
+          Login with Google
+        </button>
+        <button id="btn-logout" class="nav-item text-left w-full hidden flex items-center gap-2 text-rose-400 hover:text-rose-300">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+          Logout
+        </button>
       </nav>
     </aside>
 
@@ -105,6 +115,83 @@ const { title, activePage } = Astro.props;
   <div id="toast-container" class="fixed bottom-6 right-6 flex flex-col gap-3 z-[9999]"></div>
 
   <script>
+    import { auth, db, googleProvider, signInWithPopup, signOut, doc, setDoc, getDoc } from '../lib/firebase.js';
+    import { onAuthStateChanged } from 'firebase/auth';
+
+    let currentUser = null;
+
+    // Listen to Auth State
+    onAuthStateChanged(auth, async (user) => {
+      const btnLogin = document.getElementById('btn-login');
+      const btnLogout = document.getElementById('btn-logout');
+      
+      if (user) {
+        currentUser = user;
+        if (btnLogin) btnLogin.classList.add('hidden');
+        if (btnLogout) btnLogout.classList.remove('hidden');
+        
+        // Download Cloud State
+        try {
+          const docRef = doc(db, 'users', user.uid);
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            const cloudState = docSnap.data().trackerState;
+            if (cloudState) {
+              localStorage.setItem('ai-engineering-tracker', cloudState);
+              window.dispatchEvent(new CustomEvent('tracker-updated'));
+              window.showToast?.(`Welcome back, ${user.displayName}! Sync complete.`);
+            }
+          } else {
+            uploadCloudState(); // First login, push local to cloud
+          }
+        } catch(e) {
+          console.error('Failed to sync', e);
+        }
+      } else {
+        currentUser = null;
+        if (btnLogin) btnLogin.classList.remove('hidden');
+        if (btnLogout) btnLogout.classList.add('hidden');
+      }
+    });
+
+    // Debounce to prevent spamming Firestore
+    let uploadTimeout = null;
+    async function uploadCloudState() {
+      if (!currentUser) return;
+      clearTimeout(uploadTimeout);
+      uploadTimeout = setTimeout(async () => {
+        try {
+          const localState = localStorage.getItem('ai-engineering-tracker');
+          if (!localState) return;
+          await setDoc(doc(db, 'users', currentUser.uid), {
+            trackerState: localState,
+            lastUpdated: new Date().toISOString()
+          }, { merge: true });
+          console.log("Cloud state saved!");
+        } catch(e) {
+          console.error("Failed to upload", e);
+        }
+      }, 2000);
+    }
+
+    document.getElementById('btn-login')?.addEventListener('click', async () => {
+      try {
+        await signInWithPopup(auth, googleProvider);
+      } catch (error) {
+        window.showToast?.('Login failed!', 'error');
+      }
+    });
+
+    document.getElementById('btn-logout')?.addEventListener('click', async () => {
+      try {
+        await signOut(auth);
+        window.showToast?.('Logged out.', 'success');
+        // Clear local storage on logout for security (optional)
+        // localStorage.removeItem('ai-engineering-tracker');
+        // window.location.reload();
+      } catch(e) {}
+    });
+
     window.showToast = function(message, type = 'success') {
       const container = document.getElementById('toast-container');
       const toast = document.createElement('div');
@@ -197,7 +284,10 @@ const { title, activePage } = Astro.props;
     }
     
     syncHeaderStats();
-    window.addEventListener('tracker-updated', syncHeaderStats);
+    window.addEventListener('tracker-updated', () => {
+      syncHeaderStats();
+      uploadCloudState();
+    });
   </script>
 
 </body>
