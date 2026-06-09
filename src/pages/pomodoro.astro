@@ -1,0 +1,193 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Pomodoro Timer" activePage="pomodoro">
+  
+  <div class="mb-8 animate-fade-in">
+    <h2 class="text-gray-400 text-sm font-medium uppercase tracking-widest mb-1">Productivity</h2>
+    <h1 class="text-3xl font-bold text-white tracking-tight">Focus Session</h1>
+    <p class="text-gray-500 text-sm mt-2">Complete 25-minute focus sessions to earn XP and Gems.</p>
+  </div>
+
+  <div class="sleek-card max-w-lg mx-auto p-8 md:p-12 flex flex-col items-center animate-fade-in border-[#222]">
+    
+    <!-- Mode selector -->
+    <div class="flex gap-1 p-1 bg-[#111] rounded-lg mb-10 border border-[#333] w-full max-w-[240px]">
+      <button id="mode-focus" class="flex-1 px-4 py-2 rounded-md font-medium text-sm bg-[#222] text-white transition-colors shadow-sm">Focus</button>
+      <button id="mode-break" class="flex-1 px-4 py-2 rounded-md font-medium text-sm text-gray-500 hover:text-white transition-colors">Break</button>
+    </div>
+
+    <!-- Timer Display -->
+    <div class="relative flex items-center justify-center mb-10">
+      <!-- Glow ring -->
+      <div id="timer-ring" class="absolute inset-0 rounded-full blur-xl bg-purple-500/10 transition-colors duration-1000"></div>
+      
+      <div class="relative text-[5rem] sm:text-[6rem] font-bold font-[JetBrains_Mono] text-white leading-none tracking-tight">
+        <span id="time-display">25:00</span>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="flex gap-4 w-full mb-6">
+      <button id="btn-toggle" class="sleek-btn sleek-btn-primary flex-1 py-3 text-base">
+        <svg id="icon-play" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <svg id="icon-pause" class="w-5 h-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span id="text-toggle">Start</span>
+      </button>
+      <button id="btn-reset" class="sleek-btn sleek-btn-outline px-6 py-3 text-base text-gray-400">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+      </button>
+    </div>
+
+    <!-- Token Skip Button -->
+    <div id="token-skip-container" class="w-full hidden animate-fade-in">
+      <button id="btn-token-skip" class="w-full sleek-btn px-4 py-3 bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30 text-orange-400 hover:bg-orange-500/30 flex justify-center items-center gap-2 transition-all">
+        <span class="text-xl">⏩</span> Ain't Doin Allat (<span id="token-count">0</span> left)
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const FOCUS_TIME = 25 * 60;
+    const BREAK_TIME = 5 * 60;
+
+    let timeLeft = FOCUS_TIME;
+    let isRunning = false;
+    let timerInterval = null;
+    let currentMode = 'focus'; // 'focus' | 'break'
+
+    const timeDisplay = document.getElementById('time-display');
+    const btnToggle = document.getElementById('btn-toggle');
+    const textToggle = document.getElementById('text-toggle');
+    const iconPlay = document.getElementById('icon-play');
+    const iconPause = document.getElementById('icon-pause');
+    const btnReset = document.getElementById('btn-reset');
+    
+    const modeFocus = document.getElementById('mode-focus');
+    const modeBreak = document.getElementById('mode-break');
+    const timerRing = document.getElementById('timer-ring');
+
+    function updateTokenUI() {
+      try {
+        const state = JSON.parse(localStorage.getItem('ai-engineering-tracker') || '{}');
+        const tokenCount = state.inventory && state.inventory['aint-doin-allat'] ? state.inventory['aint-doin-allat'] : 0;
+        const container = document.getElementById('token-skip-container');
+        if (tokenCount > 0 && currentMode === 'focus') {
+          container.classList.remove('hidden');
+          document.getElementById('token-count').textContent = tokenCount;
+        } else {
+          container.classList.add('hidden');
+        }
+      } catch(e) {}
+    }
+
+    function updateDisplay() {
+      const minutes = Math.floor(timeLeft / 60);
+      const seconds = timeLeft % 60;
+      timeDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    function toggleMode(mode) {
+      if (isRunning) toggleTimer();
+      currentMode = mode;
+      
+      if (mode === 'focus') {
+        timeLeft = FOCUS_TIME;
+        modeFocus.className = 'flex-1 px-4 py-2 rounded-md font-medium text-sm bg-[#222] text-white transition-colors shadow-sm';
+        modeBreak.className = 'flex-1 px-4 py-2 rounded-md font-medium text-sm text-gray-500 hover:text-white transition-colors';
+        timerRing.className = 'absolute inset-0 rounded-full blur-xl bg-purple-500/10 transition-colors duration-1000';
+      } else {
+        timeLeft = BREAK_TIME;
+        modeBreak.className = 'flex-1 px-4 py-2 rounded-md font-medium text-sm bg-[#222] text-white transition-colors shadow-sm';
+        modeFocus.className = 'flex-1 px-4 py-2 rounded-md font-medium text-sm text-gray-500 hover:text-white transition-colors';
+        timerRing.className = 'absolute inset-0 rounded-full blur-xl bg-cyan-500/10 transition-colors duration-1000';
+      }
+      updateDisplay();
+      updateTokenUI();
+    }
+
+    function handleComplete() {
+      if (currentMode === 'focus') {
+        try {
+          const saved = localStorage.getItem('ai-engineering-tracker');
+          const state = saved ? JSON.parse(saved) : { xp: 0, gold: 0 };
+          state.xp = (state.xp || 0) + 50;
+          state.gold = (state.gold || 0) + 10;
+          localStorage.setItem('ai-engineering-tracker', JSON.stringify(state));
+          window.dispatchEvent(new CustomEvent('tracker-updated'));
+          window.showToast?.('Focus session complete! +50 XP | 💎 10', 'success');
+        } catch(e) {}
+      } else {
+        window.showToast?.('Break over. Back to work!', 'success');
+      }
+      
+      // Auto-switch mode
+      toggleMode(currentMode === 'focus' ? 'break' : 'focus');
+    }
+
+    function toggleTimer() {
+      if (isRunning) {
+        clearInterval(timerInterval);
+        isRunning = false;
+        textToggle.textContent = 'Start';
+        iconPlay.classList.remove('hidden');
+        iconPause.classList.add('hidden');
+        btnToggle.classList.replace('sleek-btn-outline', 'sleek-btn-primary');
+        timerRing.classList.remove('animate-pulse');
+      } else {
+        isRunning = true;
+        textToggle.textContent = 'Pause';
+        iconPlay.classList.add('hidden');
+        iconPause.classList.remove('hidden');
+        btnToggle.classList.replace('sleek-btn-primary', 'sleek-btn-outline');
+        timerRing.classList.add('animate-pulse');
+
+        timerInterval = setInterval(() => {
+          timeLeft--;
+          updateDisplay();
+          
+          if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            isRunning = false;
+            handleComplete();
+          }
+        }, 1000);
+      }
+    }
+
+    // Event Listeners
+    btnToggle.addEventListener('click', toggleTimer);
+    
+    btnReset.addEventListener('click', () => {
+      if (isRunning) toggleTimer();
+      timeLeft = currentMode === 'focus' ? FOCUS_TIME : BREAK_TIME;
+      updateDisplay();
+    });
+
+    document.getElementById('btn-token-skip')?.addEventListener('click', () => {
+      const state = JSON.parse(localStorage.getItem('ai-engineering-tracker') || '{}');
+      if (state.inventory && state.inventory['aint-doin-allat'] > 0) {
+        state.inventory['aint-doin-allat']--;
+        localStorage.setItem('ai-engineering-tracker', JSON.stringify(state));
+        window.dispatchEvent(new Event('tracker-updated'));
+        
+        if (isRunning) toggleTimer();
+        timeLeft = 0;
+        updateDisplay();
+        
+        setTimeout(() => {
+          handleComplete();
+          updateTokenUI();
+        }, 500);
+      }
+    });
+
+    modeFocus.addEventListener('click', () => toggleMode('focus'));
+    modeBreak.addEventListener('click', () => toggleMode('break'));
+
+    // Init
+    updateDisplay();
+    updateTokenUI();
+  </script>
+</Layout>

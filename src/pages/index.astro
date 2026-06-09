@@ -1,0 +1,311 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { playlists, TOTAL_VIDEOS } from '../data/playlists.js';
+---
+
+<Layout title="Dashboard" activePage="dashboard">
+  
+  <div id="dash-data" class="hidden" data-playlists={JSON.stringify(playlists)} data-total={TOTAL_VIDEOS}></div>
+
+  <div class="mb-8 animate-fade-in flex flex-col md:flex-row md:items-end justify-between gap-4">
+    <div>
+      <h2 class="text-gray-400 text-sm font-medium uppercase tracking-widest mb-1">Overview</h2>
+      <h1 id="dash-name" class="text-3xl font-bold text-white tracking-tight transition-all duration-500">AI Engineering Dashboard</h1>
+    </div>
+  </div>
+
+  <!-- UP NEXT BANNER -->
+  <div id="up-next-banner" class="hidden mb-8 sleek-card bg-gradient-to-r from-purple-500/10 to-cyan-500/10 border-purple-500/30 p-6 flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden group">
+    <div class="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-cyan-500/5 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
+    <div class="flex items-center gap-4 z-10">
+      <div id="up-next-icon" class="w-14 h-14 rounded-2xl bg-[#111] flex items-center justify-center text-3xl border border-[#333]">🚀</div>
+      <div>
+        <div class="text-xs font-semibold text-purple-400 uppercase tracking-wider mb-1">Up Next</div>
+        <h3 id="up-next-title" class="text-xl font-bold text-white">Loading...</h3>
+        <p id="up-next-playlist" class="text-sm text-gray-400">Loading...</p>
+      </div>
+    </div>
+    <a id="up-next-link" href="#" class="sleek-btn sleek-btn-primary z-10 whitespace-nowrap px-8 py-3">
+      <svg class="w-5 h-5 mr-2 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      Continue
+    </a>
+  </div>
+
+  <!-- Hero Stats -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 stagger-children">
+    <div class="sleek-card p-5 flex flex-col justify-between">
+      <div class="flex items-center gap-2 mb-4 text-purple-400">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        <span class="text-xs font-semibold uppercase tracking-wider">Aura Level</span>
+      </div>
+      <div class="text-3xl font-bold font-[JetBrains_Mono] text-white"><span id="dash-level">1</span></div>
+    </div>
+    <div class="sleek-card p-5 flex flex-col justify-between">
+      <div class="flex items-center gap-2 mb-4 text-cyan-400">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+        <span class="text-xs font-semibold uppercase tracking-wider">Gold</span>
+      </div>
+      <div class="text-3xl font-bold font-[JetBrains_Mono] text-white"><span id="dash-gold">0</span></div>
+    </div>
+    <div class="sleek-card p-5 flex flex-col justify-between">
+      <div class="flex items-center gap-2 mb-4 text-emerald-400">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+        <span class="text-xs font-semibold uppercase tracking-wider">Total XP</span>
+      </div>
+      <div class="text-3xl font-bold font-[JetBrains_Mono] text-white"><span id="dash-xp">0</span></div>
+    </div>
+    <div class="sleek-card p-5 flex flex-col justify-between">
+      <div class="flex items-center gap-2 mb-4 text-orange-400">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/></svg>
+        <span class="text-xs font-semibold uppercase tracking-wider">Streak</span>
+      </div>
+      <div class="text-3xl font-bold font-[JetBrains_Mono] text-white"><span id="dash-streak">0</span> <span class="text-xl">🔥</span></div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
+    
+    <!-- LEFT COL: Dynamic To-Do List & Pace Calculator -->
+    <div class="flex flex-col gap-8">
+      
+      <!-- Pace Calculator -->
+      <div class="sleek-card p-5">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-bold text-white">Study Pace Calculator</h3>
+          <button id="btn-set-goal" class="text-xs text-purple-400 hover:text-purple-300">Set Target Date</button>
+        </div>
+        <div class="flex flex-col gap-2">
+          <div class="flex justify-between text-sm">
+            <span class="text-gray-400">Goal Date:</span>
+            <span id="target-date-display" class="text-white font-medium">None</span>
+          </div>
+          <div class="flex justify-between text-sm">
+            <span class="text-gray-400">Videos Remaining:</span>
+            <span id="videos-remaining" class="text-white font-[JetBrains_Mono]">---</span>
+          </div>
+          <div class="h-px w-full bg-[#333] my-2"></div>
+          <div class="flex justify-between text-sm items-center">
+            <span class="text-gray-400">Required Pace:</span>
+            <div class="text-right">
+              <div id="pace-videos" class="text-emerald-400 font-bold font-[JetBrains_Mono]">---</div>
+              <div id="pace-time" class="text-xs text-gray-500">~ 45m / video</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dynamic To-Do List -->
+      <div class="sleek-card p-5 flex-1">
+        <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+          <svg class="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Daily Quests
+        </h3>
+        <div id="todo-list" class="flex flex-col gap-3">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT COL: Learning Paths Grid -->
+    <div class="lg:col-span-2">
+      <h2 class="text-xl font-semibold text-white mb-4">Learning Paths</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 stagger-children">
+        {playlists.map(p => (
+          <a href={`/playlist/${p.id}`} class="sleek-card p-5 hover:bg-[#111] group">
+            <div class="flex justify-between items-start mb-6">
+              <div>
+                <h3 class={`text-lg font-bold text-white group-hover:${p.colorClass} transition-colors`}>{p.name}</h3>
+                <p class="text-gray-400 text-sm mt-1">{p.shortName}</p>
+              </div>
+              <div class={`w-10 h-10 rounded-lg ${p.bgClass} flex items-center justify-center ${p.colorClass} border ${p.borderClass}`}>
+                <span class="text-lg">{p.emoji}</span>
+              </div>
+            </div>
+            <div class="w-full bg-[#222] h-1.5 rounded-full overflow-hidden">
+              <div id={`prog-${p.id}`} class="h-full transition-all duration-500" style={`width: 0%; background-color: ${p.color}; box-shadow: 0 0 10px ${p.color}80;`}></div>
+            </div>
+            <div class="mt-2 text-xs text-gray-500 text-right"><span id={`prog-text-${p.id}`}>0</span> / {p.totalVideos}</div>
+          </a>
+        ))}
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    function updateDashboard() {
+      try {
+        const dataEl = document.getElementById('dash-data');
+        const ALL_PLAYLISTS = JSON.parse(dataEl.dataset.playlists);
+        const TOTAL_VIDEOS = parseInt(dataEl.dataset.total, 10);
+
+        const saved = localStorage.getItem('ai-engineering-tracker');
+        const state = saved ? JSON.parse(saved) : {};
+        const completed = state.completedVideos || {};
+
+        document.getElementById('dash-xp').textContent = state.xp || 0;
+        document.getElementById('dash-gold').textContent = state.gold || 0;
+        document.getElementById('dash-streak').textContent = state.streak?.current || 0;
+        
+        // Simple level math
+        const xp = state.xp || 0;
+        let level = 1;
+        const thresholds = [0,100,250,500,800,1200,1700,2300,3000];
+        for (let i = 1; i < thresholds.length; i++) {
+          if (xp >= thresholds[i]) level = i + 1;
+        }
+        document.getElementById('dash-level').textContent = level;
+
+        // Apply Cosmetics
+        const dashName = document.getElementById('dash-name');
+        if (state.cosmetics && state.cosmetics.includes('title-sigma-dev')) {
+          dashName.className = 'text-3xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-purple-500 to-amber-500 animate-pulse drop-shadow-[0_0_10px_rgba(168,85,247,0.5)]';
+          dashName.textContent = 'Max Aura Sigma Dev 👑';
+        } else {
+          dashName.className = 'text-3xl font-bold text-white tracking-tight transition-all duration-500';
+          dashName.textContent = 'AI Engineering Dashboard';
+        }
+
+        // Progress calculation
+        let overallCompletedCount = 0;
+        const counts = {};
+        for (const p of ALL_PLAYLISTS) counts[p.id] = 0;
+
+        for (const key of Object.keys(completed)) {
+          // Find which playlist this video belongs to
+          // In playlists.js, video IDs are exactly as fetched. 
+          // We need to scan playlists to find where this ID lives to increment the correct count.
+          for (const p of ALL_PLAYLISTS) {
+            if (p.videos.find(v => v.id === key)) {
+              counts[p.id]++;
+              overallCompletedCount++;
+              break;
+            }
+          }
+        }
+
+        // Update progress bars
+        for (const p of ALL_PLAYLISTS) {
+          const el = document.getElementById(`prog-${p.id}`);
+          const textEl = document.getElementById(`prog-text-${p.id}`);
+          if (el && textEl) {
+            const pct = Math.min((counts[p.id] / p.totalVideos) * 100, 100);
+            el.style.width = `${pct}%`;
+            textEl.textContent = counts[p.id];
+          }
+        }
+
+        // --- UP NEXT LOGIC ---
+        // Find the first unwatched video in the user's active playlist, or just the first overall
+        let upNextVideo = null;
+        let upNextPlaylist = null;
+        
+        for (const p of ALL_PLAYLISTS) {
+          // If they've started this playlist but haven't finished it
+          if (counts[p.id] > 0 && counts[p.id] < p.totalVideos) {
+            // Find the exact video they are on
+            for (let i = 0; i < p.videos.length; i++) {
+              if (!completed[p.videos[i].id]) {
+                upNextVideo = p.videos[i];
+                upNextPlaylist = p;
+                break;
+              }
+            }
+          }
+          if (upNextVideo) break;
+        }
+        
+        // Fallback: If no partially completed playlist, find the very first playlist they haven't finished
+        if (!upNextVideo) {
+          for (const p of ALL_PLAYLISTS) {
+            if (counts[p.id] === 0) {
+              upNextVideo = p.videos[0];
+              upNextPlaylist = p;
+              break;
+            }
+          }
+        }
+
+        const banner = document.getElementById('up-next-banner');
+        if (upNextVideo && upNextPlaylist) {
+          banner.classList.remove('hidden');
+          banner.classList.add('flex');
+          document.getElementById('up-next-icon').textContent = upNextPlaylist.emoji;
+          document.getElementById('up-next-title').textContent = `${upNextPlaylist.shortName} - ${upNextVideo.title}`;
+          document.getElementById('up-next-playlist').textContent = upNextPlaylist.name;
+          document.getElementById('up-next-link').href = `/playlist/${upNextPlaylist.id}`;
+        } else {
+          banner.classList.add('hidden');
+          banner.classList.remove('flex');
+        }
+
+        // --- DYNAMIC TO-DO LIST ---
+        const todoContainer = document.getElementById('todo-list');
+        todoContainer.innerHTML = '';
+        
+        const tasks = [];
+        if (upNextVideo) {
+          tasks.push({ text: `Watch ${upNextPlaylist.shortName} - ${upNextVideo.title}`, xp: 25 });
+        } else {
+          tasks.push({ text: `Course Complete! Touch Grass.`, xp: 0 });
+        }
+        tasks.push({ text: 'Complete 2 Focus Pomodoros', xp: 20 });
+        if (state.gold > 100) {
+          tasks.push({ text: 'Spin the W or L Gacha Box', xp: 5 });
+        } else {
+          tasks.push({ text: 'Review Notes & Code', xp: 10 });
+        }
+
+        tasks.forEach(t => {
+          todoContainer.innerHTML += `
+            <div class="flex items-center gap-3 p-3 rounded-xl bg-[#111] border border-[#222]">
+              <div class="w-5 h-5 rounded border border-[#444] flex-shrink-0"></div>
+              <div class="flex-1 text-sm text-gray-300">${t.text}</div>
+              <div class="text-xs font-bold text-purple-400">+${t.xp} XP</div>
+            </div>
+          `;
+        });
+
+        // --- PACE CALCULATOR ---
+        let targetDateStr = localStorage.getItem('ai-tracker-target-date');
+        let remainingVideos = TOTAL_VIDEOS - overallCompletedCount;
+        document.getElementById('videos-remaining').textContent = remainingVideos;
+        
+        if (targetDateStr) {
+          const targetDate = new Date(targetDateStr);
+          document.getElementById('target-date-display').textContent = targetDate.toLocaleDateString();
+          
+          const now = new Date();
+          const daysLeft = Math.max(1, Math.ceil((targetDate - now) / (1000 * 60 * 60 * 24)));
+          
+          const videosPerDay = (remainingVideos / daysLeft).toFixed(1);
+          const minsPerDay = Math.ceil(videosPerDay * 45); // Assuming 45 mins per video
+          
+          const hrs = Math.floor(minsPerDay / 60);
+          const mins = minsPerDay % 60;
+          
+          document.getElementById('pace-videos').textContent = `${videosPerDay} vids/day`;
+          document.getElementById('pace-time').textContent = `~ ${hrs > 0 ? hrs + 'h ' : ''}${mins}m / day`;
+        } else {
+          document.getElementById('pace-videos').textContent = 'Set Goal ->';
+          document.getElementById('pace-time').textContent = '';
+        }
+
+      } catch(e) { console.error('Dashboard error:', e); }
+    }
+    
+    document.getElementById('btn-set-goal')?.addEventListener('click', () => {
+      const date = prompt('Enter your target completion date (YYYY-MM-DD):');
+      if (date && !isNaN(new Date(date).getTime())) {
+        localStorage.setItem('ai-tracker-target-date', date);
+        updateDashboard();
+      } else if (date) {
+        alert('Invalid date format.');
+      }
+    });
+
+    updateDashboard();
+    window.addEventListener('tracker-updated', updateDashboard);
+  </script>
+</Layout>

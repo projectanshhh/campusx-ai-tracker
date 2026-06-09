@@ -1,0 +1,10 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import PlaylistDetail from '../../components/PlaylistDetail.astro';
+import { playlists } from '../../data/playlists.js';
+
+const playlistData = playlists.find(p => p.id === 'fastapi');
+---
+<Layout title={playlistData.name} activePage={playlistData.id}>
+  <PlaylistDetail {...playlistData} />
+</Layout>

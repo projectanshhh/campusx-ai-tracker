@@ -1,0 +1,316 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { REWARDS } from '../data/playlists.js';
+---
+
+<Layout title="Rewards Shop" activePage="rewards">
+  <div class="mb-8 flex justify-between items-end">
+    <div>
+      <h2 class="text-gray-400 text-sm font-medium uppercase tracking-widest mb-1">Store</h2>
+      <h1 class="text-3xl font-bold text-white tracking-tight">The Black Market</h1>
+    </div>
+    <div class="sleek-card px-4 py-2 flex items-center gap-2 border-amber-500/30 bg-amber-500/5">
+      <span class="text-xl">💰</span>
+      <span id="shop-gold" class="text-2xl font-bold text-amber-400 font-[JetBrains_Mono]">0</span>
+    </div>
+  </div>
+
+  <!-- GACHA BOX SECTION -->
+  <div class="sleek-card mb-10 p-8 border-purple-500/50 relative overflow-hidden group flex flex-col md:flex-row items-center gap-8 bg-gradient-to-br from-[#111] to-purple-900/20">
+    <!-- Animation wrapper -->
+    <div id="gacha-container" class="w-40 h-40 flex-shrink-0 flex items-center justify-center relative cursor-pointer hover:scale-105 transition-transform" onclick="rollGacha()">
+      <div class="absolute inset-0 bg-purple-500/20 rounded-full blur-3xl group-hover:bg-purple-500/40 transition-all"></div>
+      <div id="gacha-box" class="text-8xl z-10 filter drop-shadow-[0_0_15px_rgba(168,85,247,0.5)]">📦</div>
+    </div>
+    
+    <div class="flex-1 text-center md:text-left z-10">
+      <h2 class="text-3xl font-bold text-white mb-2 flex items-center gap-3 justify-center md:justify-start">
+        <span class="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500">"W or L" Gacha Box</span>
+      </h2>
+      <p class="text-gray-300 mb-6 text-lg">Blow your gold on a YOLO chance to max your aura. Roll for legendary themes, XP, or shields. No cap.</p>
+      
+      <div class="flex flex-wrap gap-4 justify-center md:justify-start mb-6">
+        <span class="px-3 py-1 rounded text-xs font-bold bg-gray-500/20 text-gray-400">Mid (50%)</span>
+        <span class="px-3 py-1 rounded text-xs font-bold bg-blue-500/20 text-blue-400">Valid (30%)</span>
+        <span class="px-3 py-1 rounded text-xs font-bold bg-purple-500/20 text-purple-400">Tuff (15%)</span>
+        <span class="px-3 py-1 rounded text-xs font-bold bg-amber-500/20 text-amber-400">Bussin (5%)</span>
+      </div>
+
+      <button onclick="rollGacha()" id="btn-gacha" class="sleek-btn px-8 py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded shadow-[0_0_15px_rgba(168,85,247,0.5)] flex items-center gap-2">
+        Roll Box (75 💰)
+      </button>
+    </div>
+
+    <!-- Gacha Overlay for animations -->
+    <div id="gacha-overlay" class="fixed inset-0 bg-black/90 z-50 hidden flex-col items-center justify-center">
+      <div id="gacha-anim-box" class="text-9xl mb-8">📦</div>
+      <div id="gacha-result" class="text-4xl font-bold text-white text-center px-4 opacity-0 scale-50 transition-all duration-500"></div>
+      <button onclick="closeGacha()" id="btn-close-gacha" class="mt-8 sleek-btn opacity-0 transition-opacity">Continue</button>
+    </div>
+  </div>
+
+  <!-- DAILY DEALS -->
+  <div class="mb-10">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-xl font-semibold text-white flex items-center gap-2">
+        <span class="text-red-500 animate-pulse">●</span> Dark Web Market (Daily Deals)
+      </h2>
+      <div class="text-sm text-gray-400 font-[JetBrains_Mono]">Resets in <span id="deal-timer" class="text-white">00:00:00</span></div>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="daily-deals-grid">
+      <!-- Deals injected by JS -->
+    </div>
+  </div>
+
+  <!-- STANDARD SHOP -->
+  <h2 class="text-xl font-semibold text-white mb-4">The Stash</h2>
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 stagger-children">
+    {REWARDS.filter(r => r.id !== 'w-or-l-box').map(reward => (
+      <div class="sleek-card p-5 flex flex-col group hover:-translate-y-1 transition-transform">
+        <div class="text-4xl mb-4 group-hover:scale-110 transition-transform origin-left">{reward.emoji}</div>
+        <h3 class="text-lg font-bold text-white mb-1">{reward.name}</h3>
+        <p class="text-sm text-gray-400 flex-1 mb-4">{reward.description}</p>
+        
+        <div class="flex items-center justify-between mt-auto pt-4 border-t border-[#333]">
+          <div class="font-bold text-amber-400 font-[JetBrains_Mono]">{reward.cost} 💰</div>
+          <button 
+            onclick={`buyReward('${reward.id}', ${reward.cost})`}
+            id={`btn-buy-${reward.id}`}
+            class="px-4 py-1.5 rounded bg-[#222] hover:bg-[#333] text-sm font-semibold text-white transition-colors"
+          >
+            Buy
+          </button>
+        </div>
+      </div>
+    ))}
+  </div>
+
+  <script>
+    // Audio Context for sound effects
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx;
+    
+    function playBeep(freq, duration, vol=0.1) {
+      if (!audioCtx) audioCtx = new AudioContext();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+    }
+
+    function updateShopUI() {
+      const state = JSON.parse(localStorage.getItem('ai-engineering-tracker') || '{}');
+      document.getElementById('shop-gold').textContent = state.gold || 0;
+      
+      const inventory = state.inventory || {};
+      const cosmetics = state.cosmetics || [];
+      
+      // Update standard buttons
+      document.querySelectorAll('[id^="btn-buy-"]').forEach(btn => {
+        const id = btn.id.replace('btn-buy-', '');
+        // If it's a theme or title and already owned
+        if (cosmetics.includes(id)) {
+          btn.textContent = 'Owned';
+          btn.disabled = true;
+          btn.classList.add('opacity-50', 'cursor-not-allowed');
+        } else {
+          btn.textContent = 'Buy';
+          btn.disabled = false;
+          btn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+      });
+    }
+
+    // Pass data for JS usage
+    window.REWARDS_DATA = {
+      'touch-grass-pass': { name: 'Touch Grass Pass', emoji: '🛡️', type: 'consumable' },
+      'aint-doin-allat': { name: '"Ain\'t Doin Allat" Token', emoji: '⏩', type: 'consumable' },
+      'nah-bro-next': { name: '"Nah Bro Next" Reroll', emoji: '🎲', type: 'consumable' },
+      'double-xp': { name: 'Double XP Potion', emoji: '⚡', type: 'boost' },
+      'theme-tuff-hacker': { name: 'Tuff Hacker Aura', emoji: '💻', type: 'theme' },
+      'title-sigma-dev': { name: 'Max Aura Sigma Title', emoji: '👑', type: 'cosmetic' },
+      'theme-ocean': { name: 'W Rizz Ocean Theme', emoji: '🌊', type: 'theme' },
+    };
+
+    window.buyReward = function(id, cost) {
+      const state = JSON.parse(localStorage.getItem('ai-engineering-tracker') || '{}');
+      const gold = state.gold || 0;
+      
+      if (gold < cost) {
+        alert('Bro you broke 💀 Need more gold.');
+        playBeep(150, 0.3);
+        return;
+      }
+      
+      state.gold -= cost;
+      
+      const reward = window.REWARDS_DATA[id];
+      if (reward.type === 'theme' || reward.type === 'cosmetic') {
+        if (!state.cosmetics) state.cosmetics = [];
+        state.cosmetics.push(id);
+      } else {
+        if (!state.inventory) state.inventory = {};
+        state.inventory[id] = (state.inventory[id] || 0) + 1;
+      }
+      
+      localStorage.setItem('ai-engineering-tracker', JSON.stringify(state));
+      window.dispatchEvent(new Event('tracker-updated'));
+      playBeep(800, 0.1);
+      playBeep(1200, 0.2);
+      
+      updateShopUI();
+    };
+
+    // --- GACHA LOGIC ---
+    window.rollGacha = async function() {
+      const state = JSON.parse(localStorage.getItem('ai-engineering-tracker') || '{}');
+      if ((state.gold || 0) < 75) {
+        alert('Not enough gold to roll the box! L');
+        return;
+      }
+      
+      // Deduct gold
+      state.gold -= 75;
+      localStorage.setItem('ai-engineering-tracker', JSON.stringify(state));
+      updateShopUI();
+      window.dispatchEvent(new Event('tracker-updated'));
+
+      // Show overlay
+      const overlay = document.getElementById('gacha-overlay');
+      const box = document.getElementById('gacha-anim-box');
+      const resText = document.getElementById('gacha-result');
+      const btnClose = document.getElementById('btn-close-gacha');
+      
+      overlay.classList.remove('hidden');
+      overlay.classList.add('flex');
+      box.textContent = '📦';
+      box.className = 'text-9xl mb-8 animate-bounce';
+      resText.style.opacity = '0';
+      resText.style.transform = 'scale(0.5)';
+      btnClose.style.opacity = '0';
+
+      playBeep(300, 0.5);
+      
+      // RNG Roll
+      // Common 50%, Rare 30%, Epic 15%, Legendary 5%
+      const roll = Math.random();
+      let outcome = {};
+      
+      if (roll < 0.5) {
+        // Common (Mid)
+        const rand = Math.random();
+        if (rand < 0.5) { outcome = { name: '+50 XP', xp: 50, msg: 'Mid AF 💀', color: 'text-gray-400' }; }
+        else { outcome = { name: 'Nah Bro Next', id: 'nah-bro-next', msg: 'Mid 💀', color: 'text-gray-400' }; }
+      } else if (roll < 0.8) {
+        // Rare (Valid)
+        const rand = Math.random();
+        if (rand < 0.5) { outcome = { name: 'Touch Grass Pass', id: 'touch-grass-pass', msg: 'Valid W 🛡️', color: 'text-blue-400' }; }
+        else { outcome = { name: 'Ain\'t Doin Allat Token', id: 'aint-doin-allat', msg: 'Valid W ⏩', color: 'text-blue-400' }; }
+      } else if (roll < 0.95) {
+        // Epic (Tuff)
+        outcome = { name: 'W Rizz Ocean Theme', id: 'theme-ocean', msg: 'TUFF W 🌊', color: 'text-purple-400' };
+      } else {
+        // Legendary (Bussin)
+        outcome = { name: 'JACKPOT: 1000 Gold + 5000 XP', xp: 5000, gold: 1000, msg: 'BUSSIN! MASSIVE W 👑', color: 'text-amber-400' };
+      }
+
+      // Add delay for suspense
+      await new Promise(r => setTimeout(r, 1500));
+      
+      // Explosion
+      box.className = 'text-9xl mb-8 animate-ping';
+      playBeep(100, 0.1);
+      await new Promise(r => setTimeout(r, 300));
+      playBeep(800, 0.5);
+      
+      box.textContent = outcome.msg.includes('BUSSIN') ? '💎' : (outcome.msg.includes('TUFF') ? '✨' : '🎁');
+      box.className = 'text-9xl mb-8 transform scale-150 transition-transform';
+      
+      resText.innerHTML = `<div class="text-sm text-gray-400 uppercase tracking-widest mb-2">${outcome.msg}</div><div class="${outcome.color}">${outcome.name}</div>`;
+      resText.style.opacity = '1';
+      resText.style.transform = 'scale(1)';
+      btnClose.style.opacity = '1';
+
+      // Apply Rewards
+      if (outcome.xp) state.xp = (state.xp || 0) + outcome.xp;
+      if (outcome.gold) state.gold = (state.gold || 0) + outcome.gold;
+      if (outcome.id) {
+        const type = window.REWARDS_DATA[outcome.id]?.type;
+        if (type === 'theme') {
+          if (!state.cosmetics) state.cosmetics = [];
+          if (!state.cosmetics.includes(outcome.id)) state.cosmetics.push(outcome.id);
+        } else {
+          if (!state.inventory) state.inventory = {};
+          state.inventory[outcome.id] = (state.inventory[outcome.id] || 0) + 1;
+        }
+      }
+      localStorage.setItem('ai-engineering-tracker', JSON.stringify(state));
+      updateShopUI();
+      window.dispatchEvent(new Event('tracker-updated'));
+    };
+
+    window.closeGacha = function() {
+      document.getElementById('gacha-overlay').classList.add('hidden');
+      document.getElementById('gacha-overlay').classList.remove('flex');
+    };
+
+    // --- DAILY DEALS TIMER ---
+    function updateTimer() {
+      const now = new Date();
+      const tomorrow = new Date(now);
+      tomorrow.setHours(24, 0, 0, 0);
+      const diff = tomorrow - now;
+      
+      const h = Math.floor((diff / (1000 * 60 * 60)) % 24).toString().padStart(2, '0');
+      const m = Math.floor((diff / 1000 / 60) % 60).toString().padStart(2, '0');
+      const s = Math.floor((diff / 1000) % 60).toString().padStart(2, '0');
+      
+      const timerEl = document.getElementById('deal-timer');
+      if (timerEl) timerEl.textContent = `${h}:${m}:${s}`;
+    }
+    setInterval(updateTimer, 1000);
+    updateTimer();
+
+    // Populate fake daily deals
+    const dealsGrid = document.getElementById('daily-deals-grid');
+    dealsGrid.innerHTML = `
+      <div class="sleek-card p-4 border border-red-500/30 bg-red-500/5 relative overflow-hidden group">
+        <div class="absolute top-2 right-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded">-50%</div>
+        <div class="text-3xl mb-2">🛡️</div>
+        <h4 class="font-bold text-white text-sm">Touch Grass Pass</h4>
+        <div class="flex justify-between items-center mt-2">
+          <div class="text-amber-400 font-bold font-[JetBrains_Mono]"><span class="line-through text-gray-500 text-xs mr-1">250</span>125 💰</div>
+          <button onclick="buyReward('touch-grass-pass', 125)" class="text-xs bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded transition-colors">Buy</button>
+        </div>
+      </div>
+      <div class="sleek-card p-4 border border-red-500/30 bg-red-500/5 relative overflow-hidden group">
+        <div class="absolute top-2 right-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded">-30%</div>
+        <div class="text-3xl mb-2">⚡</div>
+        <h4 class="font-bold text-white text-sm">Double XP Potion</h4>
+        <div class="flex justify-between items-center mt-2">
+          <div class="text-amber-400 font-bold font-[JetBrains_Mono]"><span class="line-through text-gray-500 text-xs mr-1">400</span>280 💰</div>
+          <button onclick="buyReward('double-xp', 280)" class="text-xs bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded transition-colors">Buy</button>
+        </div>
+      </div>
+      <div class="sleek-card p-4 border border-red-500/30 bg-red-500/5 relative overflow-hidden group">
+        <div class="absolute top-2 right-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded">-80%</div>
+        <div class="text-3xl mb-2">🎲</div>
+        <h4 class="font-bold text-white text-sm">Nah Bro Next</h4>
+        <div class="flex justify-between items-center mt-2">
+          <div class="text-amber-400 font-bold font-[JetBrains_Mono]"><span class="line-through text-gray-500 text-xs mr-1">25</span>5 💰</div>
+          <button onclick="buyReward('nah-bro-next', 5)" class="text-xs bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded transition-colors">Buy</button>
+        </div>
+      </div>
+    `;
+
+    updateShopUI();
+    window.addEventListener('tracker-updated', updateShopUI);
+  </script>
+</Layout>
