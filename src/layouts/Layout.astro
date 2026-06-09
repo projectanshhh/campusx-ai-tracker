@@ -145,7 +145,10 @@ const { title, activePage } = Astro.props;
             uploadCloudState(); // First login, push local to cloud
           }
         } catch(e) {
-          console.error('Failed to sync', e);
+          console.error('Failed to sync from cloud:', e);
+          if (e.code === 'permission-denied') {
+             window.showToast?.('Database access denied (Check Firestore Rules!)', 'error');
+          }
         }
       } else {
         currentUser = null;
@@ -178,7 +181,14 @@ const { title, activePage } = Astro.props;
       try {
         await signInWithPopup(auth, googleProvider);
       } catch (error) {
-        window.showToast?.('Login failed!', 'error');
+        console.error("Firebase Auth Error:", error);
+        if (error.code === 'auth/unauthorized-domain') {
+          window.showToast?.('Error: Add this URL to Firebase Authorized Domains!', 'error');
+        } else if (error.code === 'auth/popup-closed-by-user') {
+          // Ignore if they just closed the popup
+        } else {
+          window.showToast?.(`Login failed: ${error.message}`, 'error');
+        }
       }
     });
 
