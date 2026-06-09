@@ -3,13 +3,13 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from "firebase/
 import { getFirestore, doc, setDoc, getDoc } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCFYjmxBexwbuFdP6_c91vzGdW1oZPQ4eI",
-  authDomain: "hiii-e949e.firebaseapp.com",
-  projectId: "hiii-e949e",
-  storageBucket: "hiii-e949e.firebasestorage.app",
-  messagingSenderId: "864501183837",
-  appId: "1:864501183837:web:8b2b61f6c2ae189097a4b4",
-  measurementId: "G-3XHSMW0P4V"
+  apiKey: "AIzaSyCKIYh8xKYVK-PIl71U_frttVCbmyfonT8",
+  authDomain: "ai-engineer-100.firebaseapp.com",
+  projectId: "ai-engineer-100",
+  storageBucket: "ai-engineer-100.firebasestorage.app",
+  messagingSenderId: "110528842576",
+  appId: "1:110528842576:web:aefe0306a05094f7647a55",
+  measurementId: "G-WG6KF12ETE"
 };
 
 // Initialize Firebase (prevent re-initialization in SSR)
